@@ -12,6 +12,13 @@ class CalendarScreen extends StatefulWidget {
 
 class _CalendarScreenState extends State<CalendarScreen> {
   bool _trigger = false;
+  DateTime _selectedDay = DateTime(
+    DateTime.now().year,
+    DateTime.now().month,
+    DateTime.now().day,
+  );
+
+  DateTime focusedDay = DateTime.now();
 
   @override
   Widget build(BuildContext context) {
@@ -28,6 +35,15 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 formatButtonVisible: false,
                 titleCentered: true,
               ),
+              selectedDayPredicate: (day) {
+                return isSameDay(_selectedDay, day);
+              },
+              onDaySelected: (selectedDay, focusedDay) {
+                setState(() {
+                  _selectedDay = selectedDay;
+                  focusedDay = focusedDay;
+                });
+              },
             ),
             Expanded(
               child: Container(
