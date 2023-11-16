@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:collection/collection.dart';
 import 'package:go_router/go_router.dart';
+import 'package:with_todo/core/common/model/menu_model.dart';
+
+final selectIndexProvider = StateProvider.autoDispose<int>((ref) {
+  return 1;
+});
 
 class NaviBarScreen extends ConsumerStatefulWidget {
   String location;
@@ -26,142 +32,126 @@ class _NaviBarScreenState extends ConsumerState<NaviBarScreen> {
     super.initState();
   }
 
+  void itemClick(int index, BuildContext context, String url) {
+    goNavigation(index, context, url);
+    setState(() {});
+  }
+
+  void goNavigation(int index, BuildContext context, String url) async {
+    context.go(url);
+    ref.watch(selectIndexProvider.notifier).state = index;
+    await Future.delayed(Duration(milliseconds: 300));
+  }
+
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-
-    List<BottomNavBarItem> tabs = [
-      BottomNavBarItem(
-        initialLocation: '/todo',
-        icon: BottomContainerItem(index: 0, img: 'assets/images/ic_menu1.png'),
-        label: '',
-        activeIcon: BottomContainerItem(
-            index: 0, active: true, img: 'assets/images/ic_menu1_selected.png'),
-      ),
-      BottomNavBarItem(
-        initialLocation: '/',
-        icon: BottomContainerItem(index: 1, img: 'assets/images/ic_menu2.png'),
-        label: '',
-        activeIcon: BottomContainerItem(
-            index: 1, active: true, img: 'assets/images/ic_menu2_selected.png'),
-      ),
-      BottomNavBarItem(
-        initialLocation: '/settings',
-        icon: BottomContainerItem(index: 2, img: 'assets/images/ic_menu3.png'),
-        label: '',
-        activeIcon: BottomContainerItem(
-            index: 2, active: true, img: 'assets/images/ic_menu3_selected.png'),
-      ),
+    List<MenuModel> menus = [
+      MenuModel(
+          index: 0,
+          url: '/todo',
+          title: '체크목록',
+          img: 'assets/images/icon_todo.png',
+          selectImg: 'assets/images/icon_todo_select.png'),
+      MenuModel(
+          index: 1,
+          url: '/',
+          title: '달력',
+          img: 'assets/images/icon_calendar.png',
+          selectImg: 'assets/images/icon_calendar_select.png'),
+      MenuModel(
+          index: 2,
+          url: '/settings',
+          title: '설정',
+          img: 'assets/images/icon_setting.png',
+          selectImg: 'assets/images/icon_setting_select.png')
     ];
 
     return Scaffold(
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(size.width / 17),
-            topRight: Radius.circular(size.width / 17),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Color(0XFF666666).withOpacity(0.2),
-              spreadRadius: 0,
-              blurRadius: 30,
-              offset: Offset(0, 10),
+      backgroundColor: Color(0XFFF7F6F6),
+      body: SizedBox(
+        child: Column(
+          children: [
+            Container(
+              //메뉴버튼
+              height: 170,
+              child: Padding(
+                padding: EdgeInsets.only(top: 20, left: 10, right: 10),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: menus.mapIndexed((index, element) {
+                    return MenuItem(
+                      index: index,
+                      url: menus[index].url!,
+                      imag: menus[index].img!,
+                      selectImag: menus[index].selectImg!,
+                      itemClick: itemClick,
+                    );
+                  }).toList(),
+                ),
+              ),
+            ),
+            Expanded(
+              //화면
+              child: Container(
+                child: widget.child,
+              ),
             )
           ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(size.width / 17),
-            topRight: Radius.circular(size.width / 17),
-          ),
-          child: BottomNavigationBar(
-              elevation: 0,
-              backgroundColor: Color(0XFFEAE8E7),
-              showSelectedLabels: false,
-              showUnselectedLabels: false,
-              selectedFontSize: 0,
-              unselectedFontSize: 0,
-              type: BottomNavigationBarType.fixed,
-              onTap: (int index) {
-                String location = tabs[index].initialLocation;
-
-                setState(() {
-                  _currentIndex = index;
-                });
-                context.go(location);
-              },
-              currentIndex: widget.location == '/todo'
-                  ? 0
-                  : widget.location == '/'
-                      ? 1
-                      : 2,
-              items: tabs),
         ),
       ),
     );
   }
 }
 
-class BottomNavBarItem extends BottomNavigationBarItem {
-  final String initialLocation;
-
-  const BottomNavBarItem({
-    required this.initialLocation,
-    required Widget icon,
-    required Widget activeIcon,
-    String? label,
-  }) : super(icon: icon, activeIcon: activeIcon, label: label);
-}
-
-class BottomContainerItem extends ConsumerStatefulWidget {
+class MenuItem extends ConsumerStatefulWidget {
   final int index;
-  final String img;
-  final bool? active;
-  const BottomContainerItem({
+  final String url;
+  final String imag;
+  final String selectImag;
+  const MenuItem({
     super.key,
     required this.index,
-    required this.img,
-    this.active = false,
+    required this.itemClick,
+    required this.url,
+    required this.imag,
+    required this.selectImag,
   });
 
+  final Function(int index, BuildContext context, String url) itemClick;
+
   @override
-  ConsumerState<BottomContainerItem> createState() =>
-      _BottomContainerItemState();
+  ConsumerState<MenuItem> createState() => _MenuItemState();
 }
 
-class _BottomContainerItemState extends ConsumerState<BottomContainerItem> {
+class _MenuItemState extends ConsumerState<MenuItem> {
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
+    final selectIndex = ref.watch(selectIndexProvider);
 
-    return Padding(
-      padding: EdgeInsets.only(right: widget.index == 4 ? 0 : 1.5),
+    return GestureDetector(
+      onTap: () {
+        widget.itemClick(widget.index, context, widget.url);
+      },
       child: Container(
-        width: size.width / 5,
-        height: size.height / 8.3,
+        width: 100,
+        height: 100,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(50),
-          color: widget.active == true ? Color(0XFF4F4C49) : Color(0XFFFFFFFF),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Color(0XFF666666).withOpacity(0.3),
+              blurRadius: 20,
+              offset: Offset(0, 5),
+            )
+          ],
+          color: widget.index == selectIndex
+              ? Color(0XFF44ADF4)
+              : Color(0XFFEFEFEF),
         ),
         child: Padding(
-          padding: EdgeInsets.only(top: size.height / 43),
-          child: Container(
-            height: size.height / 15,
-            child: Text(
-              'test',
-              style: TextStyle(
-                fontSize: size.width / 23,
-                fontWeight:
-                    widget.active == true ? FontWeight.w700 : FontWeight.w600,
-                height: 1.4,
-                color: widget.active == true
-                    ? Color(0XFFEAEAEA)
-                    : Color(0XFF8B8885),
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ),
+          padding: EdgeInsets.all(10),
+          child: Image.asset(
+              widget.index == selectIndex ? widget.selectImag : widget.imag),
         ),
       ),
     );
