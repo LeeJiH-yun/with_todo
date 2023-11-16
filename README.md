@@ -1,6 +1,6 @@
 # with_todo
 
-A new Flutter project.
+내가 사용하려고 만드는 투두리스트 앱
 
 ## Getting Started
 
