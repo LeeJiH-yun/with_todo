@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 class CalendarScreen extends StatefulWidget {
@@ -32,7 +33,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
               child: Container(
                 width: MediaQuery.of(context).size.width,
                 child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 13),
+                  padding: EdgeInsets.symmetric(horizontal: 10),
                   child: Column(
                     children: [
                       Container(
@@ -113,20 +114,25 @@ class _CalendarScreenState extends State<CalendarScreen> {
   }
 
   Column achievementBar() {
+    //달성율
     return Column(
-      mainAxisAlignment: MainAxisAlignment.spaceAround,
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          '오늘의 달성율입니다!',
-          style: TextStyle(fontSize: 28, fontWeight: FontWeight.w600),
-        ),
-        Container(
-          height: 13,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(50),
-            color: Colors.pink,
+        Padding(
+          padding: EdgeInsets.only(left: 8),
+          child: Text(
+            '오늘의 달성율입니다!',
+            style: TextStyle(fontSize: 28, fontWeight: FontWeight.w600),
           ),
+        ),
+        LinearPercentIndicator(
+          lineHeight: 13,
+          percent: 0.5,
+          animation: true,
+          backgroundColor: Colors.yellow,
+          progressColor: Colors.blue,
+          barRadius: Radius.circular(50),
         )
       ],
     );
