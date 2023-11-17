@@ -2,13 +2,10 @@ import 'package:flutter/material.dart';
 
 class CheckListItem extends StatefulWidget {
   final int index;
-  final bool checkable;
+  final bool? checkable;
   final String content;
   const CheckListItem(
-      {super.key,
-      required this.index,
-      required this.checkable,
-      required this.content});
+      {super.key, required this.index, this.checkable, required this.content});
 
   @override
   State<CheckListItem> createState() => _CheckListItemState();
@@ -22,9 +19,10 @@ class _CheckListItemState extends State<CheckListItem> {
     return Row(
       children: [
         Checkbox(
-          value: widget.checkable,
+          value: _isCheck, //widget.checkable,
           onChanged: (value) {
             setState(() {
+              //widget.checkable = value!;
               _isCheck = value!;
             });
           },

@@ -84,52 +84,72 @@ class _CalendarScreenState extends State<CalendarScreen> {
                       topRight: Radius.circular(20)),
                   color: Color(0XFF666666),
                 ),
-                child: Column(
-                  children: [
-                    Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.only(
-                            topLeft: Radius.circular(20),
-                            topRight: Radius.circular(20)),
-                      ),
-                      width: MediaQuery.of(context).size.width,
-                      height: 40,
-                      child: Stack(
-                        children: [
-                          Align(
-                            alignment: Alignment.center,
-                            child: GestureDetector(
-                              onTap: () {
-                                _trigger = !_trigger;
-                                setState(() {});
-                              },
-                              child: SizedBox(
-                                width: 250,
-                                child: Image.asset(_trigger
-                                    ? 'assets/images/icon_bottom_arrow.png'
-                                    : 'assets/images/icon_top_arrow.png'),
+                child: SingleChildScrollView(
+                  physics: _trigger
+                      ? AlwaysScrollableScrollPhysics()
+                      : NeverScrollableScrollPhysics(),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(20),
+                              topRight: Radius.circular(20)),
+                        ),
+                        width: MediaQuery.of(context).size.width,
+                        height: 40,
+                        child: Stack(
+                          children: [
+                            Align(
+                              alignment: Alignment.center,
+                              child: GestureDetector(
+                                onTap: () {
+                                  _trigger = !_trigger;
+                                  setState(() {});
+                                },
+                                child: SizedBox(
+                                  width: 250,
+                                  child: Image.asset(_trigger
+                                      ? 'assets/images/icon_bottom_arrow.png'
+                                      : 'assets/images/icon_top_arrow.png'),
+                                ),
                               ),
                             ),
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: Padding(
+                                padding: EdgeInsets.only(
+                                  top: 7,
+                                  bottom: 5,
+                                  right: 10,
+                                ),
+                                child: SizedBox(
+                                    width: 50,
+                                    child: Image.asset(
+                                        'assets/images/icon_edit.png')),
+                              ),
+                            )
+                          ],
+                        ),
+                      ),
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 20),
+                        child: Text(
+                          '${_selectedDay.month}월 ${_selectedDay.day}일',
+                          style: TextStyle(
+                            fontSize: 25,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
                           ),
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: Padding(
-                              padding: EdgeInsets.only(
-                                top: 7,
-                                bottom: 5,
-                                right: 10,
-                              ),
-                              child: SizedBox(
-                                  width: 50,
-                                  child: Image.asset(
-                                      'assets/images/icon_edit.png')),
-                            ),
-                          )
-                        ],
+                        ),
                       ),
-                    ),
-                    checkList(),
-                  ],
+                      SizedBox(
+                        height: 10,
+                      ),
+                      checkList(),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -177,35 +197,13 @@ class _CalendarScreenState extends State<CalendarScreen> {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 20),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            '${_selectedDay.month}월 ${_selectedDay.day}일',
-            style: TextStyle(
-              fontSize: 25,
-              fontWeight: FontWeight.w600,
-              color: Colors.white,
-            ),
-          ),
-          // SizedBox(
-          //   height: 10,
-          // ),
-          Container(
-            height: 35,
-            color: Colors.amber,
-            child: SingleChildScrollView(
-              child: Column(
-                children: checkItem.mapIndexed((index, element) {
-                  return CheckListItem(
-                    index: index,
-                    checkable: checkItem[index].checkable!,
-                    content: checkItem[index].content!,
-                  );
-                }).toList(),
-              ),
-            ),
-          ),
-        ],
+        children: checkItem.mapIndexed((index, element) {
+          return CheckListItem(
+            index: index,
+            checkable: checkItem[index].checkable!,
+            content: checkItem[index].content!,
+          );
+        }).toList(),
       ),
     );
   }
