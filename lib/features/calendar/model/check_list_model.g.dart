@@ -11,6 +11,7 @@ _$CheckListModelImpl _$$CheckListModelImplFromJson(Map<String, dynamic> json) =>
       index: json['index'] as int?,
       checkable: json['checkable'] as bool?,
       content: json['content'] as String?,
+      state: json['state'] as String?,
     );
 
 Map<String, dynamic> _$$CheckListModelImplToJson(
@@ -19,4 +20,5 @@ Map<String, dynamic> _$$CheckListModelImplToJson(
       'index': instance.index,
       'checkable': instance.checkable,
       'content': instance.content,
+      'state': instance.state,
     };

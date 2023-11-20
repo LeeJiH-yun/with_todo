@@ -23,6 +23,7 @@ mixin _$CheckListModel {
   int? get index => throw _privateConstructorUsedError;
   bool? get checkable => throw _privateConstructorUsedError;
   String? get content => throw _privateConstructorUsedError;
+  String? get state => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -36,7 +37,7 @@ abstract class $CheckListModelCopyWith<$Res> {
           CheckListModel value, $Res Function(CheckListModel) then) =
       _$CheckListModelCopyWithImpl<$Res, CheckListModel>;
   @useResult
-  $Res call({int? index, bool? checkable, String? content});
+  $Res call({int? index, bool? checkable, String? content, String? state});
 }
 
 /// @nodoc
@@ -55,6 +56,7 @@ class _$CheckListModelCopyWithImpl<$Res, $Val extends CheckListModel>
     Object? index = freezed,
     Object? checkable = freezed,
     Object? content = freezed,
+    Object? state = freezed,
   }) {
     return _then(_value.copyWith(
       index: freezed == index
@@ -69,6 +71,10 @@ class _$CheckListModelCopyWithImpl<$Res, $Val extends CheckListModel>
           ? _value.content
           : content // ignore: cast_nullable_to_non_nullable
               as String?,
+      state: freezed == state
+          ? _value.state
+          : state // ignore: cast_nullable_to_non_nullable
+              as String?,
     ) as $Val);
   }
 }
@@ -81,7 +87,7 @@ abstract class _$$CheckListModelImplCopyWith<$Res>
       __$$CheckListModelImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({int? index, bool? checkable, String? content});
+  $Res call({int? index, bool? checkable, String? content, String? state});
 }
 
 /// @nodoc
@@ -98,6 +104,7 @@ class __$$CheckListModelImplCopyWithImpl<$Res>
     Object? index = freezed,
     Object? checkable = freezed,
     Object? content = freezed,
+    Object? state = freezed,
   }) {
     return _then(_$CheckListModelImpl(
       index: freezed == index
@@ -112,6 +119,10 @@ class __$$CheckListModelImplCopyWithImpl<$Res>
           ? _value.content
           : content // ignore: cast_nullable_to_non_nullable
               as String?,
+      state: freezed == state
+          ? _value.state
+          : state // ignore: cast_nullable_to_non_nullable
+              as String?,
     ));
   }
 }
@@ -119,7 +130,7 @@ class __$$CheckListModelImplCopyWithImpl<$Res>
 /// @nodoc
 @JsonSerializable()
 class _$CheckListModelImpl implements _CheckListModel {
-  _$CheckListModelImpl({this.index, this.checkable, this.content});
+  _$CheckListModelImpl({this.index, this.checkable, this.content, this.state});
 
   factory _$CheckListModelImpl.fromJson(Map<String, dynamic> json) =>
       _$$CheckListModelImplFromJson(json);
@@ -130,10 +141,12 @@ class _$CheckListModelImpl implements _CheckListModel {
   final bool? checkable;
   @override
   final String? content;
+  @override
+  final String? state;
 
   @override
   String toString() {
-    return 'CheckListModel(index: $index, checkable: $checkable, content: $content)';
+    return 'CheckListModel(index: $index, checkable: $checkable, content: $content, state: $state)';
   }
 
   @override
@@ -144,12 +157,14 @@ class _$CheckListModelImpl implements _CheckListModel {
             (identical(other.index, index) || other.index == index) &&
             (identical(other.checkable, checkable) ||
                 other.checkable == checkable) &&
-            (identical(other.content, content) || other.content == content));
+            (identical(other.content, content) || other.content == content) &&
+            (identical(other.state, state) || other.state == state));
   }
 
   @JsonKey(ignore: true)
   @override
-  int get hashCode => Object.hash(runtimeType, index, checkable, content);
+  int get hashCode =>
+      Object.hash(runtimeType, index, checkable, content, state);
 
   @JsonKey(ignore: true)
   @override
@@ -170,7 +185,8 @@ abstract class _CheckListModel implements CheckListModel {
   factory _CheckListModel(
       {final int? index,
       final bool? checkable,
-      final String? content}) = _$CheckListModelImpl;
+      final String? content,
+      final String? state}) = _$CheckListModelImpl;
 
   factory _CheckListModel.fromJson(Map<String, dynamic> json) =
       _$CheckListModelImpl.fromJson;
@@ -181,6 +197,8 @@ abstract class _CheckListModel implements CheckListModel {
   bool? get checkable;
   @override
   String? get content;
+  @override
+  String? get state;
   @override
   @JsonKey(ignore: true)
   _$$CheckListModelImplCopyWith<_$CheckListModelImpl> get copyWith =>

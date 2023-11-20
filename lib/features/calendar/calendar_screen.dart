@@ -1,19 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
+import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
+import 'package:with_todo/core/common/components/navigation_bar.dart';
 import 'package:with_todo/features/calendar/check_list_item.dart';
 import 'package:with_todo/features/calendar/model/check_list_model.dart';
 import 'package:collection/collection.dart';
 
-class CalendarScreen extends StatefulWidget {
+class CalendarScreen extends ConsumerStatefulWidget {
   static String get routeName => 'CalendarScreen';
   const CalendarScreen({super.key});
 
   @override
-  State<CalendarScreen> createState() => _CalendarScreenState();
+  ConsumerState<CalendarScreen> createState() => _CalendarScreenState();
 }
 
-class _CalendarScreenState extends State<CalendarScreen> {
+class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   bool _trigger = false;
   DateTime _selectedDay = DateTime(
     DateTime.now().year,
@@ -118,16 +122,23 @@ class _CalendarScreenState extends State<CalendarScreen> {
                             ),
                             Align(
                               alignment: Alignment.centerRight,
-                              child: Padding(
-                                padding: EdgeInsets.only(
-                                  top: 7,
-                                  bottom: 5,
-                                  right: 10,
+                              child: GestureDetector(
+                                onTap: () {
+                                  context.go('/todo');
+                                  ref.read(selectIndexProvider.notifier).state =
+                                      0;
+                                },
+                                child: Padding(
+                                  padding: EdgeInsets.only(
+                                    top: 7,
+                                    bottom: 5,
+                                    right: 10,
+                                  ),
+                                  child: SizedBox(
+                                      width: 50,
+                                      child: Image.asset(
+                                          'assets/images/icon_edit.png')),
                                 ),
-                                child: SizedBox(
-                                    width: 50,
-                                    child: Image.asset(
-                                        'assets/images/icon_edit.png')),
                               ),
                             )
                           ],
