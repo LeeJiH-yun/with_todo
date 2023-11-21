@@ -7,6 +7,12 @@ import 'package:with_todo/core/common/model/menu_model.dart';
 final selectIndexProvider = StateProvider.autoDispose<int>((ref) {
   return 1;
 });
+final selectMainColorProvider = StateProvider<Color>((ref) {
+  return Color(0XFF44ADF4);
+});
+final selectSubColorProvider = StateProvider<Color>((ref) {
+  return Colors.yellow;
+});
 
 class NaviBarScreen extends ConsumerStatefulWidget {
   String location;
@@ -24,8 +30,6 @@ class NaviBarScreen extends ConsumerStatefulWidget {
 }
 
 class _NaviBarScreenState extends ConsumerState<NaviBarScreen> {
-  int _currentIndex = 0;
-
   @override
   void initState() {
     print('widget location ${widget.location}');
@@ -127,6 +131,7 @@ class _MenuItemState extends ConsumerState<MenuItem> {
   @override
   Widget build(BuildContext context) {
     final selectIndex = ref.watch(selectIndexProvider);
+    final selectColor = ref.watch(selectMainColorProvider);
 
     return GestureDetector(
       onTap: () {
@@ -144,9 +149,7 @@ class _MenuItemState extends ConsumerState<MenuItem> {
               offset: Offset(0, 5),
             )
           ],
-          color: widget.index == selectIndex
-              ? Color(0XFF44ADF4)
-              : Color(0XFFEFEFEF),
+          color: widget.index == selectIndex ? selectColor : Color(0XFFEFEFEF),
         ),
         child: Padding(
           padding: EdgeInsets.all(10),

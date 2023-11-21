@@ -209,6 +209,7 @@ class _CheckListItemState extends State<CheckListItem> {
                 fontSize: 18,
               ),
               decoration: InputDecoration(
+                contentPadding: EdgeInsets.symmetric(horizontal: 12.0),
                 enabledBorder: OutlineInputBorder(
                   borderSide: BorderSide(
                       color: 'N' == widget.state
@@ -218,24 +219,10 @@ class _CheckListItemState extends State<CheckListItem> {
                 fillColor:
                     'N' == widget.state ? Color(0XFF44ADF4) : Colors.yellow,
                 filled: true,
-                labelText: widget.content,
+                hintText: widget.content,
               ),
             ),
           ),
-          // Container(
-          //   width: 339,
-          //   height: 30,
-          //   color: 'N' == widget.state ? Color(0XFF44ADF4) : Colors.yellow,
-          //   alignment: Alignment.centerLeft,
-          //   child: Text(
-          //     '${widget.content}',
-          //     style: TextStyle(
-          //       color:
-          //           'N' == widget.state ? Color(0XFFFFFFFF) : Color(0XFF999999),
-          //       fontSize: 18,
-          //     ),
-          //   ),
-          // ),
           GestureDetector(
             onTap: () {
               widget.itemRemove(widget.index);
