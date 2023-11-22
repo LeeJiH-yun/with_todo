@@ -33,40 +33,41 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
       children: [
         Column(
           children: [
-            TableCalendar(
-              focusedDay: DateTime.now(),
-              firstDay: DateTime.now().subtract(Duration(days: 365 * 10 + 2)),
-              lastDay: DateTime.now().add(Duration(days: 365 * 10 + 2)),
-              locale: 'ko_KR',
-              headerStyle: HeaderStyle(
-                formatButtonVisible: false,
-                titleCentered: true,
+            SizedBox(
+              child: TableCalendar(
+                rowHeight: 45,
+                focusedDay: DateTime.now(),
+                firstDay: DateTime.now().subtract(Duration(days: 365 * 10 + 2)),
+                lastDay: DateTime.now().add(Duration(days: 365 * 10 + 2)),
+                locale: 'ko_KR',
+                headerStyle: HeaderStyle(
+                  formatButtonVisible: false,
+                  titleCentered: true,
+                ),
+                selectedDayPredicate: (day) {
+                  return isSameDay(_selectedDay, day);
+                },
+                onDaySelected: (selectedDay, focusedDay) {
+                  setState(() {
+                    _selectedDay = DateTime(selectedDay.year, selectedDay.month,
+                        selectedDay.day, 0, 0, 0);
+                    focusedDay = focusedDay;
+                  });
+                },
               ),
-              selectedDayPredicate: (day) {
-                return isSameDay(_selectedDay, day);
-              },
-              onDaySelected: (selectedDay, focusedDay) {
-                setState(() {
-                  _selectedDay = DateTime(selectedDay.year, selectedDay.month,
-                      selectedDay.day, 0, 0, 0);
-                  focusedDay = focusedDay;
-                });
-              },
             ),
-            Expanded(
-              child: Container(
-                width: MediaQuery.of(context).size.width,
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 10),
-                  child: Column(
-                    children: [
-                      Container(
-                        //달성율
-                        height: 80,
-                        child: achievementBar(),
-                      ),
-                    ],
-                  ),
+            Container(
+              width: MediaQuery.of(context).size.width,
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 10),
+                child: Column(
+                  children: [
+                    Container(
+                      //달성율
+                      height: 80,
+                      child: achievementBar(),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -86,7 +87,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                   borderRadius: BorderRadius.only(
                       topLeft: Radius.circular(20),
                       topRight: Radius.circular(20)),
-                  color: Color(0XFF666666),
+                  color: Color(0XFF999999),
                 ),
                 child: SingleChildScrollView(
                   physics: _trigger
@@ -171,6 +172,9 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   }
 
   Column achievementBar() {
+    final selectColor = ref.watch(selectMainColorProvider);
+    final selectSubColor = ref.watch(selectSubColorProvider);
+
     //달성율
     return Column(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -187,8 +191,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
           lineHeight: 13,
           percent: 0.5,
           animation: true,
-          backgroundColor: Colors.yellow,
-          progressColor: Colors.blue,
+          backgroundColor: selectSubColor,
+          progressColor: selectColor,
           barRadius: Radius.circular(50),
         )
       ],
@@ -198,11 +202,11 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   Widget checkList() {
     //체크목록
     List<CheckListModel> checkItem = [
-      CheckListModel(index: 0, checkable: false, content: '퇴근하기'),
-      CheckListModel(index: 1, checkable: false, content: '퇴근하기1'),
-      CheckListModel(index: 2, checkable: false, content: '퇴근하기2'),
-      CheckListModel(index: 3, checkable: false, content: '퇴근하기3'),
-      CheckListModel(index: 4, checkable: false, content: '퇴근하기4'),
+      CheckListModel(checkable: false, content: '퇴근하기'),
+      CheckListModel(checkable: false, content: '퇴근하기1'),
+      CheckListModel(checkable: false, content: '퇴근하기2'),
+      CheckListModel(checkable: false, content: '퇴근하기3'),
+      CheckListModel(checkable: false, content: '퇴근하기4'),
     ];
 
     return Padding(

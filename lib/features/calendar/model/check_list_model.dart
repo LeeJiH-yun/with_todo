@@ -6,7 +6,6 @@ part 'check_list_model.freezed.dart';
 @freezed
 class CheckListModel with _$CheckListModel {
   factory CheckListModel({
-    int? index,
     bool? checkable,
     String? content,
     String? state,

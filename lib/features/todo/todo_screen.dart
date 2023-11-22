@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:collection/collection.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:with_todo/core/common/components/navigation_bar.dart';
+import 'package:with_todo/core/common/provider/scrollbar_provider.dart';
 import 'package:with_todo/features/calendar/model/check_list_model.dart';
+import 'package:provider/provider.dart' as prefix;
 
 class TodoScreen extends StatefulWidget {
   const TodoScreen({super.key});
@@ -11,12 +15,27 @@ class TodoScreen extends StatefulWidget {
 
 class _TodoScreenState extends State<TodoScreen> {
   List<CheckListModel> checkItem = [
-    CheckListModel(index: 0, checkable: false, content: '퇴근하기', state: 'O'),
-    CheckListModel(index: 1, checkable: false, content: '퇴근하기1', state: 'O'),
-    CheckListModel(index: 2, checkable: false, content: '퇴근하기2', state: 'O'),
-    CheckListModel(index: 3, checkable: false, content: '퇴근하기3', state: 'O'),
-    CheckListModel(index: 4, checkable: false, content: '퇴근하기4', state: 'O'),
+    CheckListModel(checkable: false, content: '퇴근하기', state: 'O'),
+    CheckListModel(checkable: false, content: '퇴근하기1', state: 'O'),
+    CheckListModel(checkable: false, content: '퇴근하기2', state: 'O'),
+    CheckListModel(checkable: false, content: '퇴근하기3', state: 'O'),
+    CheckListModel(checkable: false, content: '퇴근하기4', state: 'O'),
   ];
+  bool _isScroll = false;
+  ScrollController _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    isScrollable();
+    super.initState();
+  }
+
+  void isScrollable() async {
+    await Future.delayed(Duration(milliseconds: 5));
+    setState(() {
+      _isScroll = _scrollController.position.maxScrollExtent != 0;
+    });
+  }
 
   void itemRemove(int index) {
     showDialog(
@@ -46,9 +65,11 @@ class _TodoScreenState extends State<TodoScreen> {
               children: [
                 GestureDetector(
                   onTap: () {
+                    print('index $index');
                     checkItem.removeAt(index);
                     Navigator.pop(context);
                     setState(() {});
+                    print(checkItem);
                   },
                   child: Container(
                     width: 150,
@@ -101,9 +122,23 @@ class _TodoScreenState extends State<TodoScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    DateTime todayDay = DateTime.now();
+    String today = switch (todayDay.weekday) {
+      1 => '월요일',
+      2 => '화요일',
+      3 => '수요일',
+      4 => '목요일',
+      5 => '금요일',
+      6 => '토요일',
+      _ => '일요일',
+    };
+
+    return SizedBox(
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 20),
+        padding: EdgeInsets.only(
+          left: 15,
+          right: 10,
+        ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -113,7 +148,7 @@ class _TodoScreenState extends State<TodoScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    '11월 15일 수요일',
+                    '${todayDay.month}월 ${todayDay.day}일 $today',
                     style: TextStyle(fontSize: 25, fontWeight: FontWeight.w600),
                   ),
                   GestureDetector(
@@ -145,7 +180,59 @@ class _TodoScreenState extends State<TodoScreen> {
                 ],
               ),
             ),
-            checkListContainer()
+            prefix.ChangeNotifierProvider<VerticalScrollBarProvider>(
+              create: (_) => VerticalScrollBarProvider(),
+              child: prefix.Consumer<VerticalScrollBarProvider>(
+                builder: (context, value, child) {
+                  return Row(
+                    children: [
+                      NotificationListener<ScrollUpdateNotification>(
+                        onNotification: ((notification) {
+                          value.scrollListener(
+                              notification: notification,
+                              heightSize: 480 - 480 / 2);
+
+                          return false;
+                        }),
+                        child: Expanded(child: checkListContainer()),
+                      ),
+                      SizedBox(
+                        width: 10,
+                      ),
+                      Visibility(
+                        visible: _isScroll || checkItem.length > 12,
+                        maintainSize: true,
+                        maintainAnimation: true,
+                        maintainState: true,
+                        child: Container(
+                          //세로 스크롤바 구현
+                          width: 10,
+                          height: 480,
+                          color: Colors.amber,
+                          child: Stack(
+                            children: [
+                              Positioned(
+                                top: value.scrollPosition,
+                                child: Container(
+                                  width: 10,
+                                  height: 480 / 2,
+                                  decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(
+                                        10,
+                                      ),
+                                      color: Colors.blue //Color(0XFFDDDDDD),
+                                      ),
+                                ),
+                              )
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            )
           ],
         ),
       ),
@@ -160,40 +247,48 @@ class _TodoScreenState extends State<TodoScreen> {
             topLeft: Radius.circular(10), topRight: Radius.circular(10)),
         color: Color(0XFFCCCCCC),
       ),
-      child: Column(
-        children: checkItem.mapIndexed((index, element) {
-          return CheckListItem(
-            index: index,
-            content: checkItem[index].content!,
-            state: checkItem[index].state!,
-            itemRemove: itemRemove,
-          );
-        }).toList(),
+      child: ScrollConfiguration(
+        //스크롤바 숨기기
+        behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
+        child: SingleChildScrollView(
+          controller: _scrollController,
+          child: Column(
+            children: checkItem.mapIndexed((index, element) {
+              return CheckListItem(
+                index: index,
+                listData: checkItem,
+                state: checkItem[index].state!,
+                itemRemove: itemRemove,
+              );
+            }).toList(),
+          ),
+        ),
       ),
     );
   }
 }
 
-class CheckListItem extends StatefulWidget {
+class CheckListItem extends ConsumerStatefulWidget {
   final int index;
-  final String content;
+  final List<CheckListModel> listData;
   final String state;
   final Function(int index) itemRemove;
   const CheckListItem(
       {super.key,
       required this.index,
-      required this.content,
+      required this.listData,
       required this.state,
       required this.itemRemove});
 
   @override
-  State<CheckListItem> createState() => _CheckListItemState();
+  ConsumerState<CheckListItem> createState() => _CheckListItemState();
 }
 
-class _CheckListItemState extends State<CheckListItem> {
+class _CheckListItemState extends ConsumerState<CheckListItem> {
   @override
   Widget build(BuildContext context) {
-    print(widget.index);
+    final selectColor = ref.watch(selectMainColorProvider);
+    final selectSubColor = ref.watch(selectSubColorProvider);
 
     return Padding(
       padding: EdgeInsets.only(
@@ -205,26 +300,31 @@ class _CheckListItemState extends State<CheckListItem> {
             width: 339,
             height: 30,
             child: TextFormField(
-              style: TextStyle(
-                fontSize: 18,
-              ),
+              initialValue: widget.listData[widget.index].content,
+              style: TextStyle(fontSize: 15, color: Colors.white),
               decoration: InputDecoration(
-                contentPadding: EdgeInsets.symmetric(horizontal: 12.0),
+                contentPadding:
+                    EdgeInsets.only(left: 12, right: 12, bottom: 14),
+                focusedBorder: OutlineInputBorder(
+                  //커서 올라갈 경우 밑줄 효과 없애기
+                  borderSide: BorderSide(
+                    color: Colors.transparent,
+                  ),
+                ),
                 enabledBorder: OutlineInputBorder(
                   borderSide: BorderSide(
-                      color: 'N' == widget.state
-                          ? Color(0XFF44ADF4)
-                          : Colors.yellow),
+                      color:
+                          'N' == widget.state ? selectColor : selectSubColor),
                 ),
-                fillColor:
-                    'N' == widget.state ? Color(0XFF44ADF4) : Colors.yellow,
+                fillColor: 'N' == widget.state ? selectColor : selectSubColor,
                 filled: true,
-                hintText: widget.content,
+                // hintText: widget.content,
               ),
             ),
           ),
           GestureDetector(
             onTap: () {
+              print(widget.index);
               widget.itemRemove(widget.index);
             },
             child: Container(
