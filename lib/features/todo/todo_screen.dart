@@ -6,14 +6,18 @@ import 'package:with_todo/core/common/provider/scrollbar_provider.dart';
 import 'package:with_todo/features/calendar/model/check_list_model.dart';
 import 'package:provider/provider.dart' as prefix;
 
-class TodoScreen extends StatefulWidget {
+final listChangeProvider = StateProvider.autoDispose<bool>((ref) {
+  return false;
+});
+
+class TodoScreen extends ConsumerStatefulWidget {
   const TodoScreen({super.key});
 
   @override
-  State<TodoScreen> createState() => _TodoScreenState();
+  ConsumerState<TodoScreen> createState() => _TodoScreenState();
 }
 
-class _TodoScreenState extends State<TodoScreen> {
+class _TodoScreenState extends ConsumerState<TodoScreen> {
   List<CheckListModel> checkItem = [
     CheckListModel(checkable: false, content: '퇴근하기', state: 'O'),
     CheckListModel(checkable: false, content: '퇴근하기1', state: 'O'),
@@ -23,11 +27,18 @@ class _TodoScreenState extends State<TodoScreen> {
   ];
   bool _isScroll = false;
   ScrollController _scrollController = ScrollController();
+  TextEditingController _todoEditController = TextEditingController();
 
   @override
   void initState() {
     isScrollable();
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    _todoEditController.dispose();
+    super.dispose();
   }
 
   void isScrollable() async {
@@ -50,7 +61,7 @@ class _TodoScreenState extends State<TodoScreen> {
             height: 80,
             child: Center(
               child: Text(
-                '목록을 삭제하겠습니까?',
+                '항목을 삭제하겠습니까?',
                 style: TextStyle(
                   color: Color(0XFF666666),
                   fontSize: 25,
@@ -132,53 +143,83 @@ class _TodoScreenState extends State<TodoScreen> {
       6 => '토요일',
       _ => '일요일',
     };
+    final listChange = ref.watch(listChangeProvider);
 
     return SizedBox(
       child: Padding(
         padding: EdgeInsets.only(
-          left: 15,
-          right: 10,
+          left: 0,
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 10),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
+            Row(
+              children: [
+                Padding(
+                  padding: EdgeInsets.only(left: 10),
+                  child: Text(
                     '${todayDay.month}월 ${todayDay.day}일 $today',
                     style: TextStyle(fontSize: 25, fontWeight: FontWeight.w600),
                   ),
-                  GestureDetector(
+                ),
+                Visibility(
+                  visible: !listChange,
+                  maintainSize: true,
+                  maintainAnimation: true,
+                  maintainState: true,
+                  child: GestureDetector(
                     onTap: () {
                       setState(() {
                         checkItem.insert(
-                            0,
-                            CheckListModel(
-                                checkable: false,
-                                content: '내용을 입력하세요.',
-                                state: 'N'));
+                          0,
+                          CheckListModel(
+                            checkable: false,
+                            content: '내용을 입력하세요.',
+                            state: 'N',
+                          ),
+                        );
                       });
                     },
-                    child: Container(
-                      width: 30,
-                      height: 30,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(6),
-                        color: Color(0XFF666666),
-                      ),
-                      child: Padding(
-                        padding: EdgeInsets.all(5),
-                        child: Image.asset(
-                          'assets/images/icon_plus.png',
+                    child: Padding(
+                      padding: EdgeInsets.only(left: 180, right: 10),
+                      child: Container(
+                        width: 30,
+                        height: 30,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(6),
+                          color: Color(0XFF666666),
+                        ),
+                        child: Padding(
+                          padding: EdgeInsets.all(5),
+                          child: Image.asset(
+                            'assets/images/icon_plus.png',
+                          ),
                         ),
                       ),
                     ),
-                  )
-                ],
-              ),
+                  ),
+                ),
+                GestureDetector(
+                  //목록 순서바꾸기
+                  onTap: () {
+                    ref.read(listChangeProvider.notifier).state = !listChange;
+                  },
+                  child: Container(
+                    width: 30,
+                    height: 30,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(6),
+                      color: Color(0XFF666666),
+                    ),
+                    child: Padding(
+                      padding: EdgeInsets.all(5),
+                      child: Image.asset(
+                        'assets/images/icon_order_change.png',
+                      ),
+                    ),
+                  ),
+                )
+              ],
             ),
             prefix.ChangeNotifierProvider<VerticalScrollBarProvider>(
               create: (_) => VerticalScrollBarProvider(),
@@ -194,7 +235,11 @@ class _TodoScreenState extends State<TodoScreen> {
 
                           return false;
                         }),
-                        child: Expanded(child: checkListContainer()),
+                        child: Expanded(
+                          child: listChange
+                              ? reorderListContainer()
+                              : checkListContainer(),
+                        ),
                       ),
                       SizedBox(
                         width: 10,
@@ -204,27 +249,29 @@ class _TodoScreenState extends State<TodoScreen> {
                         maintainSize: true,
                         maintainAnimation: true,
                         maintainState: true,
-                        child: Container(
-                          //세로 스크롤바 구현
-                          width: 10,
-                          height: 480,
-                          color: Colors.amber,
-                          child: Stack(
-                            children: [
-                              Positioned(
-                                top: value.scrollPosition,
-                                child: Container(
-                                  width: 10,
-                                  height: 480 / 2,
-                                  decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(
-                                        10,
-                                      ),
-                                      color: Colors.blue //Color(0XFFDDDDDD),
-                                      ),
-                                ),
-                              )
-                            ],
+                        child: Padding(
+                          padding: EdgeInsets.only(right: 8),
+                          child: Container(
+                            //세로 스크롤바 구현
+                            width: 10,
+                            height: 480,
+                            child: Stack(
+                              children: [
+                                Positioned(
+                                  top: value.scrollPosition,
+                                  child: Container(
+                                    width: 10,
+                                    height: 480 / 2,
+                                    decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(
+                                          10,
+                                        ),
+                                        color: Colors.blue //Color(0XFFDDDDDD),
+                                        ),
+                                  ),
+                                )
+                              ],
+                            ),
                           ),
                         ),
                       ),
@@ -240,27 +287,65 @@ class _TodoScreenState extends State<TodoScreen> {
   }
 
   Widget checkListContainer() {
-    return Container(
-      height: 490,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(10), topRight: Radius.circular(10)),
-        color: Color(0XFFCCCCCC),
+    return Padding(
+      padding: const EdgeInsets.only(left: 13),
+      child: Container(
+        height: 490,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(10), topRight: Radius.circular(10)),
+          color: Color(0XFFCCCCCC),
+        ),
+        child: ScrollConfiguration(
+          //스크롤바 숨기기
+          behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
+          child: SingleChildScrollView(
+            controller: _scrollController,
+            child: Column(
+              children: checkItem.mapIndexed((index, element) {
+                return CheckListItem(
+                  index: index,
+                  listData: checkItem,
+                  state: checkItem[index].state!,
+                  itemRemove: itemRemove,
+                );
+              }).toList(),
+            ),
+          ),
+        ),
       ),
-      child: ScrollConfiguration(
-        //스크롤바 숨기기
-        behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
-        child: SingleChildScrollView(
-          controller: _scrollController,
-          child: Column(
-            children: checkItem.mapIndexed((index, element) {
-              return CheckListItem(
-                index: index,
-                listData: checkItem,
-                state: checkItem[index].state!,
-                itemRemove: itemRemove,
-              );
-            }).toList(),
+    );
+  }
+
+  Widget reorderListContainer() {
+    return Padding(
+      padding: const EdgeInsets.only(left: 13),
+      child: Container(
+        height: 490,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(10), topRight: Radius.circular(10)),
+          color: Color(0XFFCCCCCC),
+        ),
+        child: Padding(
+          padding: EdgeInsets.only(left: 10, right: 10),
+          child: ReorderableListView(
+            children: [
+              for (int index = 0; index < checkItem.length; index++)
+                ListTile(
+                  key: Key('$index'),
+                  title: Text('${checkItem[index].content}'),
+                ),
+            ],
+            onReorder: (int oldIndex, int newIndex) {
+              setState(() {
+                if (oldIndex < newIndex) {
+                  newIndex -= 1;
+                }
+                final CheckListModel item = checkItem.removeAt(oldIndex);
+                checkItem.insert(newIndex, item);
+              });
+            },
           ),
         ),
       ),
@@ -289,6 +374,7 @@ class _CheckListItemState extends ConsumerState<CheckListItem> {
   Widget build(BuildContext context) {
     final selectColor = ref.watch(selectMainColorProvider);
     final selectSubColor = ref.watch(selectSubColorProvider);
+    print(widget.listData[widget.index].content);
 
     return Padding(
       padding: EdgeInsets.only(
@@ -318,7 +404,7 @@ class _CheckListItemState extends ConsumerState<CheckListItem> {
                 ),
                 fillColor: 'N' == widget.state ? selectColor : selectSubColor,
                 filled: true,
-                // hintText: widget.content,
+                hintText: widget.listData[widget.index].content,
               ),
             ),
           ),
