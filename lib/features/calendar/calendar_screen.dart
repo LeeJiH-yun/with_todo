@@ -5,8 +5,8 @@ import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:with_todo/core/common/components/navigation_bar.dart';
 import 'package:with_todo/features/calendar/check_list_item.dart';
-import 'package:with_todo/features/calendar/model/check_list_model.dart';
 import 'package:collection/collection.dart';
+import 'package:with_todo/features/todo/model/check_list_model.dart';
 
 class CalendarScreen extends ConsumerStatefulWidget {
   static String get routeName => 'CalendarScreen';
@@ -206,11 +206,11 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   Widget checkList() {
     //체크목록
     List<CheckListModel> checkItem = [
-      CheckListModel(checkable: false, content: '퇴근하기'),
-      CheckListModel(checkable: false, content: '퇴근하기1'),
-      CheckListModel(checkable: false, content: '퇴근하기2'),
-      CheckListModel(checkable: false, content: '퇴근하기3'),
-      CheckListModel(checkable: false, content: '퇴근하기4'),
+      // CheckListModel(checkable: false, content: '퇴근하기'),
+      // CheckListModel(checkable: false, content: '퇴근하기1'),
+      // CheckListModel(checkable: false, content: '퇴근하기2'),
+      // CheckListModel(checkable: false, content: '퇴근하기3'),
+      // CheckListModel(checkable: false, content: '퇴근하기4'),
     ];
 
     return Padding(

@@ -2,11 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:with_todo/core/common/components/navigation_bar.dart';
+import 'package:with_todo/core/common/model/todo.dart';
 import 'package:with_todo/core/common/provider/scrollbar_provider.dart';
-import 'package:with_todo/features/calendar/model/check_list_model.dart';
+import 'package:with_todo/core/database_config.dart';
 import 'package:provider/provider.dart' as prefix;
+import 'package:with_todo/features/todo/model/check_list_model.dart';
 
 final listChangeProvider = StateProvider.autoDispose<bool>((ref) {
+  return false;
+});
+final textChangeProvider = StateProvider.autoDispose<bool>((ref) {
   return false;
 });
 
@@ -18,27 +23,22 @@ class TodoScreen extends ConsumerStatefulWidget {
 }
 
 class _TodoScreenState extends ConsumerState<TodoScreen> {
-  List<CheckListModel> checkItem = [
-    CheckListModel(checkable: false, content: '퇴근하기', state: 'O'),
-    CheckListModel(checkable: false, content: '퇴근하기1', state: 'O'),
-    CheckListModel(checkable: false, content: '퇴근하기2', state: 'O'),
-    CheckListModel(checkable: false, content: '퇴근하기3', state: 'O'),
-    CheckListModel(checkable: false, content: '퇴근하기4', state: 'O'),
-  ];
   bool _isScroll = false;
   ScrollController _scrollController = ScrollController();
-  TextEditingController _todoEditController = TextEditingController();
+  // final DatabaseService _databaseService = DatabaseService();
+  // Future<List<CheckListModel>> _todoList = ;
+  List<CheckListModel> _todoList = [];
+  // DatabaseService()
+  //     .databaseConfig()
+  //     .then((value) => DatabaseService().selectTodos());
+  int currentCount = 0;
+
+  final SQLiteHelper helper = SQLiteHelper();
 
   @override
   void initState() {
-    isScrollable();
+    // isScrollable();
     super.initState();
-  }
-
-  @override
-  void dispose() {
-    _todoEditController.dispose();
-    super.dispose();
   }
 
   void isScrollable() async {
@@ -76,11 +76,9 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
               children: [
                 GestureDetector(
                   onTap: () {
-                    print('index $index');
-                    checkItem.removeAt(index);
+                    // checkItem.removeAt(index);
                     Navigator.pop(context);
                     setState(() {});
-                    print(checkItem);
                   },
                   child: Container(
                     width: 150,
@@ -170,14 +168,21 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
                   child: GestureDetector(
                     onTap: () {
                       setState(() {
-                        checkItem.insert(
-                          0,
-                          CheckListModel(
-                            checkable: false,
-                            content: '내용을 입력하세요.',
-                            state: 'N',
-                          ),
-                        );
+                        // _databaseService.insertTodo(
+                        //   CheckListModel(
+                        //       id: currentCount + 1,
+                        //       checkable: false,
+                        //       content: '',
+                        //       state: 'O'),
+                        // );
+                        // checkItem.insert(
+                        //   0,
+                        //   CheckListModel(
+                        //     checkable: false,
+                        //     content: '',
+                        //     state: 'N',
+                        //   ),
+                        // );
                       });
                     },
                     child: Padding(
@@ -199,22 +204,26 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
                     ),
                   ),
                 ),
-                GestureDetector(
-                  //목록 순서바꾸기
-                  onTap: () {
-                    ref.read(listChangeProvider.notifier).state = !listChange;
-                  },
-                  child: Container(
-                    width: 30,
-                    height: 30,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(6),
-                      color: Color(0XFF666666),
-                    ),
-                    child: Padding(
-                      padding: EdgeInsets.all(5),
-                      child: Image.asset(
-                        'assets/images/icon_order_change.png',
+                Visibility(
+                  visible: true, //checkItem.length == 0 ? false :
+                  child: GestureDetector(
+                    //목록 순서바꾸기
+                    onTap: () {
+                      ref.read(listChangeProvider.notifier).state = !listChange;
+                    },
+                    child: Container(
+                      width: 30,
+                      height: 30,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(6),
+                        color:
+                            listChange ? Color(0XFF999999) : Color(0XFF666666),
+                      ),
+                      child: Padding(
+                        padding: EdgeInsets.all(5),
+                        child: Image.asset(
+                          'assets/images/icon_order_change.png',
+                        ),
                       ),
                     ),
                   ),
@@ -245,7 +254,7 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
                         width: 10,
                       ),
                       Visibility(
-                        visible: _isScroll || checkItem.length > 12,
+                        visible: _isScroll, // || checkItem.length > 12
                         maintainSize: true,
                         maintainAnimation: true,
                         maintainState: true,
@@ -289,29 +298,85 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
   Widget checkListContainer() {
     return Padding(
       padding: const EdgeInsets.only(left: 13),
-      child: Container(
-        height: 490,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(10), topRight: Radius.circular(10)),
-          color: Color(0XFFCCCCCC),
-        ),
-        child: ScrollConfiguration(
-          //스크롤바 숨기기
-          behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
-          child: SingleChildScrollView(
-            controller: _scrollController,
-            child: Column(
-              children: checkItem.mapIndexed((index, element) {
-                return CheckListItem(
-                  index: index,
-                  listData: checkItem,
-                  state: checkItem[index].state!,
-                  itemRemove: itemRemove,
-                );
-              }).toList(),
-            ),
+      child: GestureDetector(
+        onTap: () {
+          ref.read(textChangeProvider.notifier).state = false;
+        },
+        child: Container(
+          height: 490,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(10), topRight: Radius.circular(10)),
+            color: Color(0XFFCCCCCC),
           ),
+          // child: FutureBuilder(
+          //   future: _todoList,
+          //   builder: (context, snapshot) {
+          //     if (snapshot.hasData) {
+          //       currentCount = snapshot.data!.length;
+          //       if (currentCount == 0) {
+          //         return Center(
+          //             child: Text(
+          //           '항목을 추가하세요.',
+          //           style: TextStyle(color: Color(0XFF666666)),
+          //         ));
+          //       } else {
+          //         return ScrollConfiguration(
+          //           //스크롤바 숨기기
+          //           behavior: ScrollConfiguration.of(context)
+          //               .copyWith(scrollbars: false),
+          //           child: SingleChildScrollView(
+          //             controller: _scrollController,
+          //             child: Column(
+          //               children: snapshot.data!.mapIndexed((index, element) {
+          //                 return CheckListItem(
+          //                   index: index,
+          //                   listData: snapshot.data!,
+          //                   state: snapshot.data![index].state!,
+          //                   itemRemove: itemRemove,
+          //                 );
+          //               }).toList(),
+          //             ),
+          //           ),
+          //         );
+          //       }
+          //     } else if (snapshot.hasError) {
+          //       return Center(
+          //         child: Text('ERROR'),
+          //       );
+          //     } else {
+          //       return Center(
+          //         child: CircularProgressIndicator(
+          //           strokeWidth: 2,
+          //         ),
+          //       );
+          //     }
+          //   },
+          // ),
+          child: _todoList.length == 0
+              ? Center(
+                  child: Text(
+                  '항목을 추가하세요.',
+                  style: TextStyle(color: Color(0XFF666666)),
+                ))
+              : ScrollConfiguration(
+                  //스크롤바 숨기기
+                  behavior: ScrollConfiguration.of(context)
+                      .copyWith(scrollbars: false),
+                  child: SingleChildScrollView(
+                    controller: _scrollController,
+                    child: Column(
+                      children: _todoList.mapIndexed((index, element) {
+                        return CheckListItem(
+                          index: index,
+                          listData: _todoList,
+                          state: _todoList[index].state!,
+                          itemRemove: itemRemove,
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ),
         ),
       ),
     );
@@ -331,19 +396,19 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
           padding: EdgeInsets.only(left: 10, right: 10),
           child: ReorderableListView(
             children: [
-              for (int index = 0; index < checkItem.length; index++)
-                ListTile(
-                  key: Key('$index'),
-                  title: Text('${checkItem[index].content}'),
-                ),
+              // for (int index = 0; index < checkItem.length; index++)
+              //   ListTile(
+              //     key: Key('$index'),
+              //     title: Text('${checkItem[index].content}'),
+              //   ),
             ],
             onReorder: (int oldIndex, int newIndex) {
               setState(() {
                 if (oldIndex < newIndex) {
                   newIndex -= 1;
                 }
-                final CheckListModel item = checkItem.removeAt(oldIndex);
-                checkItem.insert(newIndex, item);
+                // final CheckListModel item = checkItem.removeAt(oldIndex);
+                // checkItem.insert(newIndex, item);
               });
             },
           ),
@@ -370,11 +435,29 @@ class CheckListItem extends ConsumerStatefulWidget {
 }
 
 class _CheckListItemState extends ConsumerState<CheckListItem> {
+  late TextEditingController _todoEditController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _todoEditController =
+        TextEditingController(text: widget.listData[widget.index].content);
+  }
+
+  @override
+  void dispose() {
+    _todoEditController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final selectColor = ref.watch(selectMainColorProvider);
     final selectSubColor = ref.watch(selectSubColorProvider);
-    print(widget.listData[widget.index].content);
+    final textChange = ref.watch(textChangeProvider);
+
+    _todoEditController =
+        TextEditingController(text: widget.listData[widget.index].content);
 
     return Padding(
       padding: EdgeInsets.only(
@@ -382,35 +465,54 @@ class _CheckListItemState extends ConsumerState<CheckListItem> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Container(
-            width: 339,
-            height: 30,
-            child: TextFormField(
-              initialValue: widget.listData[widget.index].content,
-              style: TextStyle(fontSize: 15, color: Colors.white),
-              decoration: InputDecoration(
-                contentPadding:
-                    EdgeInsets.only(left: 12, right: 12, bottom: 14),
-                focusedBorder: OutlineInputBorder(
-                  //커서 올라갈 경우 밑줄 효과 없애기
-                  borderSide: BorderSide(
-                    color: Colors.transparent,
-                  ),
+          GestureDetector(
+            onTap: () {
+              ref.read(textChangeProvider.notifier).state = true;
+            },
+            child: Container(
+                width: 339,
+                height: 30,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(6),
+                  color: 'N' == widget.state ? selectColor : selectSubColor,
                 ),
-                enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(
-                      color:
-                          'N' == widget.state ? selectColor : selectSubColor),
-                ),
-                fillColor: 'N' == widget.state ? selectColor : selectSubColor,
-                filled: true,
-                hintText: widget.listData[widget.index].content,
-              ),
-            ),
+                child: textChange
+                    ? TextFormField(
+                        controller: _todoEditController,
+                        style: TextStyle(fontSize: 15, color: Colors.white),
+                        decoration: InputDecoration(
+                          contentPadding:
+                              EdgeInsets.only(left: 12, right: 12, bottom: 14),
+                          focusedBorder: OutlineInputBorder(
+                            //커서 올라갈 경우 밑줄 효과 없애기
+                            borderSide: BorderSide(
+                              color: Colors.transparent,
+                            ),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                                color: 'N' == widget.state
+                                    ? selectColor
+                                    : selectSubColor),
+                          ),
+                          fillColor: 'N' == widget.state
+                              ? selectColor
+                              : selectSubColor,
+                          filled: true,
+                          hintText: '내용을 입력하세요.',
+                        ),
+                      )
+                    : Padding(
+                        padding: EdgeInsets.only(top: 5, left: 12, right: 12),
+                        child: Text(
+                          '${widget.listData[widget.index].content}',
+                          style:
+                              TextStyle(fontSize: 15, color: Color(0XFF777777)),
+                        ),
+                      )),
           ),
           GestureDetector(
             onTap: () {
-              print(widget.index);
               widget.itemRemove(widget.index);
             },
             child: Container(
