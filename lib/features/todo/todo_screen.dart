@@ -39,6 +39,7 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
   void initState() {
     // isScrollable();
     super.initState();
+    helper.initWinDB();
   }
 
   void isScrollable() async {
@@ -48,7 +49,8 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
     });
   }
 
-  void itemRemove(int index) {
+  void itemRemove(int id) {
+    //데이터 삭제하기
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -75,8 +77,9 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 GestureDetector(
-                  onTap: () {
+                  onTap: () async {
                     // checkItem.removeAt(index);
+                    await helper.deleteCheckItem(id);
                     Navigator.pop(context);
                     setState(() {});
                   },
@@ -129,6 +132,12 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
     );
   }
 
+  void itemUpdate(CheckListModel item) {
+    //데이터 업데이트 하기
+    helper.updateCheckItem(item);
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     DateTime todayDay = DateTime.now();
@@ -168,25 +177,15 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
                   child: GestureDetector(
                     onTap: () {
                       setState(() {
-                        // _databaseService.insertTodo(
-                        //   CheckListModel(
-                        //       id: currentCount + 1,
-                        //       checkable: false,
-                        //       content: '',
-                        //       state: 'O'),
-                        // );
-                        // checkItem.insert(
-                        //   0,
-                        //   CheckListModel(
-                        //     checkable: false,
-                        //     content: '',
-                        //     state: 'N',
-                        //   ),
-                        // );
+                        helper.insertCheckItem(CheckListModel(
+                          checkable: 0, //0: false, 1: true
+                          content: '',
+                          state: 'N',
+                        ));
                       });
                     },
                     child: Padding(
-                      padding: EdgeInsets.only(left: 180, right: 10),
+                      padding: EdgeInsets.only(left: 150, right: 10),
                       child: Container(
                         width: 30,
                         height: 30,
@@ -303,86 +302,128 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
           ref.read(textChangeProvider.notifier).state = false;
         },
         child: Container(
-          height: 490,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(10), topRight: Radius.circular(10)),
-            color: Color(0XFFCCCCCC),
-          ),
-          // child: FutureBuilder(
-          //   future: _todoList,
-          //   builder: (context, snapshot) {
-          //     if (snapshot.hasData) {
-          //       currentCount = snapshot.data!.length;
-          //       if (currentCount == 0) {
-          //         return Center(
-          //             child: Text(
-          //           '항목을 추가하세요.',
-          //           style: TextStyle(color: Color(0XFF666666)),
-          //         ));
-          //       } else {
-          //         return ScrollConfiguration(
-          //           //스크롤바 숨기기
-          //           behavior: ScrollConfiguration.of(context)
-          //               .copyWith(scrollbars: false),
-          //           child: SingleChildScrollView(
-          //             controller: _scrollController,
-          //             child: Column(
-          //               children: snapshot.data!.mapIndexed((index, element) {
-          //                 return CheckListItem(
-          //                   index: index,
-          //                   listData: snapshot.data!,
-          //                   state: snapshot.data![index].state!,
-          //                   itemRemove: itemRemove,
-          //                 );
-          //               }).toList(),
-          //             ),
-          //           ),
-          //         );
-          //       }
-          //     } else if (snapshot.hasError) {
-          //       return Center(
-          //         child: Text('ERROR'),
-          //       );
-          //     } else {
-          //       return Center(
-          //         child: CircularProgressIndicator(
-          //           strokeWidth: 2,
-          //         ),
-          //       );
-          //     }
-          //   },
-          // ),
-          child: _todoList.length == 0
-              ? Center(
-                  child: Text(
-                  '항목을 추가하세요.',
-                  style: TextStyle(color: Color(0XFF666666)),
-                ))
-              : ScrollConfiguration(
-                  //스크롤바 숨기기
-                  behavior: ScrollConfiguration.of(context)
-                      .copyWith(scrollbars: false),
-                  child: SingleChildScrollView(
-                    controller: _scrollController,
-                    child: Column(
-                      children: _todoList.mapIndexed((index, element) {
-                        return CheckListItem(
-                          index: index,
-                          listData: _todoList,
-                          state: _todoList[index].state!,
-                          itemRemove: itemRemove,
-                        );
-                      }).toList(),
+            height: 490,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(10), topRight: Radius.circular(10)),
+              color: Color(0XFFCCCCCC),
+            ),
+            child: FutureBuilder<List<CheckListModel>>(
+              future: helper.getAllCheckList(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(
+                    child: CircularProgressIndicator(),
+                  );
+                } else if (snapshot.hasError) {
+                  return Center(
+                    child: Text('Error: ${snapshot.error}'),
+                  );
+                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return const Center(
+                    child: Text(
+                      '항목을 추가하세요.',
+                      style: TextStyle(color: Color(0XFF666666)),
                     ),
-                  ),
-                ),
-        ),
+                  );
+                } else {
+                  return ScrollConfiguration(
+                    //스크롤바 숨기기
+                    behavior: ScrollConfiguration.of(context)
+                        .copyWith(scrollbars: false),
+                    child: SingleChildScrollView(
+                      controller: _scrollController,
+                      child: Column(
+                        children: snapshot.data!.mapIndexed((index, element) {
+                          return CheckListItem(
+                            index: index,
+                            listData: snapshot.data!,
+                            state: snapshot.data![index].state!,
+                            itemRemove: itemRemove,
+                            itemUpdate: itemUpdate,
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  );
+                }
+              },
+            )
+            // child: FutureBuilder(
+            //   future: _todoList,
+            //   builder: (context, snapshot) {
+            //     if (snapshot.hasData) {
+            //       currentCount = snapshot.data!.length;
+            //       if (currentCount == 0) {
+            //         return Center(
+            //             child: Text(
+            //           '항목을 추가하세요.',
+            //           style: TextStyle(color: Color(0XFF666666)),
+            //         ));
+            //       } else {
+            //         return ScrollConfiguration(
+            //           //스크롤바 숨기기
+            //           behavior: ScrollConfiguration.of(context)
+            //               .copyWith(scrollbars: false),
+            //           child: SingleChildScrollView(
+            //             controller: _scrollController,
+            //             child: Column(
+            //               children: snapshot.data!.mapIndexed((index, element) {
+            //                 return CheckListItem(
+            //                   index: index,
+            //                   listData: snapshot.data!,
+            //                   state: snapshot.data![index].state!,
+            //                   itemRemove: itemRemove,
+            //                 );
+            //               }).toList(),
+            //             ),
+            //           ),
+            //         );
+            //       }
+            //     } else if (snapshot.hasError) {
+            //       return Center(
+            //         child: Text('ERROR'),
+            //       );
+            //     } else {
+            //       return Center(
+            //         child: CircularProgressIndicator(
+            //           strokeWidth: 2,
+            //         ),
+            //       );
+            //     }
+            //   },
+            // ),
+            // child: _todoList.length == 0
+            //     ? Center(
+            //         child: Text(
+            //         '항목을 추가하세요.',
+            //         style: TextStyle(color: Color(0XFF666666)),
+            //       ))
+            //     : ScrollConfiguration(
+            //         //스크롤바 숨기기
+            //         behavior: ScrollConfiguration.of(context)
+            //             .copyWith(scrollbars: false),
+            //         child: SingleChildScrollView(
+            //           controller: _scrollController,
+            //           child: Column(
+            //             children: _todoList.mapIndexed((index, element) {
+            //               return CheckListItem(
+            //                 index: index,
+            //                 listData: _todoList,
+            //                 state: _todoList[index].state!,
+            //                 itemRemove: itemRemove,
+            //               );
+            //             }).toList(),
+            //           ),
+            //         ),
+            //       ),
+            ),
       ),
     );
   }
 
   Widget reorderListContainer() {
+    //데이터 재배치하기
     return Padding(
       padding: const EdgeInsets.only(left: 13),
       child: Container(
@@ -419,16 +460,20 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
 }
 
 class CheckListItem extends ConsumerStatefulWidget {
+  //각 목록
   final int index;
   final List<CheckListModel> listData;
   final String state;
-  final Function(int index) itemRemove;
-  const CheckListItem(
-      {super.key,
-      required this.index,
-      required this.listData,
-      required this.state,
-      required this.itemRemove});
+  final Function(int id) itemRemove;
+  final Function(CheckListModel item) itemUpdate;
+  const CheckListItem({
+    super.key,
+    required this.index,
+    required this.listData,
+    required this.state,
+    required this.itemRemove,
+    required this.itemUpdate,
+  });
 
   @override
   ConsumerState<CheckListItem> createState() => _CheckListItemState();
@@ -470,7 +515,7 @@ class _CheckListItemState extends ConsumerState<CheckListItem> {
               ref.read(textChangeProvider.notifier).state = true;
             },
             child: Container(
-                width: 339,
+                width: 300,
                 height: 30,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(6),
@@ -512,8 +557,9 @@ class _CheckListItemState extends ConsumerState<CheckListItem> {
                       )),
           ),
           GestureDetector(
+            //삭제
             onTap: () {
-              widget.itemRemove(widget.index);
+              widget.itemRemove(widget.listData[widget.index].id!);
             },
             child: Container(
               width: 30,
@@ -528,6 +574,23 @@ class _CheckListItemState extends ConsumerState<CheckListItem> {
                   'assets/images/icon_minus.png',
                 ),
               ),
+            ),
+          ),
+          GestureDetector(
+            //수정
+            onTap: () {
+              widget.listData[widget.index].content =
+                  _todoEditController.text; //내용 수정해서 넣어준당
+              widget.itemUpdate(widget.listData[widget.index]);
+            },
+            child: Container(
+              width: 30,
+              height: 30,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(6),
+                color: Colors.amber,
+              ),
+              child: Icon(Icons.check),
             ),
           )
         ],

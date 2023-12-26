@@ -4,7 +4,7 @@ import 'package:with_todo/core/common/components/navigation_bar.dart';
 
 class CheckListItem extends ConsumerStatefulWidget {
   final int index;
-  final bool? checkable;
+  final int? checkable;
   final String content;
   const CheckListItem(
       {super.key, required this.index, this.checkable, required this.content});

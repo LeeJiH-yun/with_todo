@@ -102,6 +102,8 @@
 //위에꺼 보류
 
 import 'dart:math';
+import 'package:path/path.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:with_todo/features/todo/model/check_list_model.dart';
 
@@ -113,15 +115,20 @@ class SQLiteHelper {
       //이미 초기화된 경우 기존 데이터베이스 인스턴스 반환
       return _database!;
     }
+    sqfliteFfiInit();
+
     _database = await initWinDB(); //아직 초기화 되지 않은 경우 초기화
     return _database!;
   }
 
   Future<Database> initWinDB() async {
-    sqfliteFfiInit();
     final databaseFactory = databaseFactoryFfi;
+    final documentsDir = await getApplicationDocumentsDirectory();
+    final path = join(documentsDir.path, 'databases', 'todo_database.db');
+    // 데이터베이스 주소 C:\Users\dlld1\OneDrive\문서\databases\todo_database.db
     return await databaseFactory.openDatabase(
-      inMemoryDatabasePath,
+      //inMemoryDatabasePath, //메모리에만 존재한다.
+      path, //파일 시스템에 저장하기
       options: OpenDatabaseOptions(
         onCreate: _onCreate,
         version: 1,
@@ -131,11 +138,11 @@ class SQLiteHelper {
 
   Future<void> _onCreate(Database database, int version) async {
     final db = database;
-    await db.execute(""" CREATE TABLE IF NOT EXISTS users(
+    await db.execute(""" CREATE TABLE IF NOT EXISTS checklist(
       id INTEGER PRIMARY KEY,
-      checkable BOOLEAN,
+      checkable INTEGER,
       content TEXT,
-      state TEXT,
+      state TEXT
     )
     """);
   }

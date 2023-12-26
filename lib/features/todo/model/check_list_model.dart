@@ -18,7 +18,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 
 class CheckListModel {
   late int? id;
-  late bool? checkable;
+  late int? checkable;
   late String? content;
   late String? state;
 
