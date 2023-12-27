@@ -7,6 +7,7 @@ import 'package:with_todo/core/common/components/navigation_bar.dart';
 import 'package:with_todo/features/calendar/check_list_item.dart';
 import 'package:collection/collection.dart';
 import 'package:with_todo/features/todo/model/check_list_model.dart';
+import 'package:with_todo/core/database_config.dart';
 
 class CalendarScreen extends ConsumerStatefulWidget {
   static String get routeName => 'CalendarScreen';
@@ -23,8 +24,19 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     DateTime.now().month,
     DateTime.now().day,
   );
+  DateTime _selectedYear = DateTime(
+    DateTime.now().year,
+  );
+
+  final SQLiteHelper helper = SQLiteHelper();
 
   DateTime focusedDay = DateTime.now();
+
+  void itemUpdate(CheckListModel item) {
+    //데이터 업데이트 하기
+    helper.updateCheckItem(item);
+    setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -45,6 +57,33 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                 ),
                 selectedDayPredicate: (day) {
                   return isSameDay(_selectedDay, day);
+                },
+                onHeaderTapped: (focusedDay) {
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        title: Text('연도 선택'),
+                        content: Container(
+                          width: 300,
+                          height: 300,
+                          child: YearPicker(
+                            firstDate: DateTime(DateTime.now().year - 100, 1),
+                            lastDate: DateTime(DateTime.now().year + 100, 1),
+                            selectedDate: _selectedYear,
+                            onChanged: (DateTime dateTime) {
+                              print('현재 $_selectedDay'); //현재에서
+                              print('dateTime $dateTime'); //연도만 바뀌어야함
+                              focusedDay = dateTime;
+                              setState(() {});
+                              print('focusedDay $focusedDay'); //연도만 바뀌어야함
+                              Navigator.pop(context);
+                            },
+                          ),
+                        ),
+                      );
+                    },
+                  );
                 },
                 onDaySelected: (selectedDay, focusedDay) {
                   setState(() {
@@ -215,15 +254,56 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
 
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 20),
-      child: Column(
-        children: checkItem.mapIndexed((index, element) {
-          return CheckListItem(
-            index: index,
-            checkable: checkItem[index].checkable!,
-            content: checkItem[index].content!,
-          );
-        }).toList(),
+      child: FutureBuilder<List<CheckListModel>>(
+        future: helper.getAllCheckList(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+          } else if (snapshot.hasError) {
+            return Center(
+              child: Text('Error: ${snapshot.error}'),
+            );
+          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return const Center(
+              child: Text(
+                '항목을 추가하세요.',
+                style: TextStyle(color: Color(0XFF666666)),
+              ),
+            );
+          } else {
+            return ScrollConfiguration(
+              //스크롤바 숨기기
+              behavior:
+                  ScrollConfiguration.of(context).copyWith(scrollbars: false),
+              child: SingleChildScrollView(
+                // controller: _scrollController,
+                child: Column(
+                  children: snapshot.data!.mapIndexed((index, element) {
+                    return CheckListItem(
+                      index: index,
+                      checkable: snapshot.data![index].checkable,
+                      content: snapshot.data![index].content!,
+                      listData: snapshot.data!,
+                      itemUpdate: itemUpdate,
+                    );
+                  }).toList(),
+                ),
+              ),
+            );
+          }
+        },
       ),
+      // child: Column(
+      //   children: checkItem.mapIndexed((index, element) {
+      //     return CheckListItem(
+      //       index: index,
+      //       checkable: checkItem[index].checkable!,
+      //       content: checkItem[index].content!,
+      //     );
+      //   }).toList(),
+      // ),
     );
   }
 }

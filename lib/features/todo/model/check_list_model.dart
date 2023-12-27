@@ -18,9 +18,9 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 
 class CheckListModel {
   late int? id;
-  late int? checkable;
+  late int? checkable; //0: false, 1: true
   late String? content;
-  late String? state;
+  late String? state; //N: 새로 추가, O: 이미 있던 거
 
   CheckListModel(
       {this.id,

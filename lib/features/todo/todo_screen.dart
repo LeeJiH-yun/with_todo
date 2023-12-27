@@ -551,10 +551,11 @@ class _CheckListItemState extends ConsumerState<CheckListItem> {
                         padding: EdgeInsets.only(top: 5, left: 12, right: 12),
                         child: Text(
                           '${widget.listData[widget.index].content}',
-                          style:
-                              TextStyle(fontSize: 15, color: Color(0XFF777777)),
-                        ),
-                      )),
+                          style: TextStyle(
+                            fontSize: 15,
+                            color: Color(0XFF777777),
+                          ),
+                        ))),
           ),
           GestureDetector(
             //삭제
@@ -581,6 +582,7 @@ class _CheckListItemState extends ConsumerState<CheckListItem> {
             onTap: () {
               widget.listData[widget.index].content =
                   _todoEditController.text; //내용 수정해서 넣어준당
+              widget.listData[widget.index].state = 'O'; //수정했으니 기존에 있는 상태로
               widget.itemUpdate(widget.listData[widget.index]);
             },
             child: Container(
