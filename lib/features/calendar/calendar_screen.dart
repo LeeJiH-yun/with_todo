@@ -30,8 +30,6 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
 
   final SQLiteHelper helper = SQLiteHelper();
 
-  DateTime focusedDay = DateTime.now();
-
   void itemUpdate(CheckListModel item) {
     //데이터 업데이트 하기
     helper.updateCheckItem(item);
@@ -47,7 +45,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
             SizedBox(
               child: TableCalendar(
                 rowHeight: 45,
-                focusedDay: DateTime.now(),
+                focusedDay: _selectedDay,
                 firstDay: DateTime.now().subtract(Duration(days: 365 * 10 + 2)),
                 lastDay: DateTime.now().add(Duration(days: 365 * 10 + 2)),
                 locale: 'ko_KR',
@@ -72,12 +70,14 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                             lastDate: DateTime(DateTime.now().year + 100, 1),
                             selectedDate: _selectedYear,
                             onChanged: (DateTime dateTime) {
-                              print('현재 $_selectedDay'); //현재에서
-                              print('dateTime $dateTime'); //연도만 바뀌어야함
-                              focusedDay = dateTime;
-                              setState(() {});
-                              print('focusedDay $focusedDay'); //연도만 바뀌어야함
+                              focusedDay = DateTime(
+                                  dateTime.year, //선택한 연도는 dateTime에 들어있음
+                                  _selectedDay.month,
+                                  _selectedDay.day);
+
+                              _selectedDay = focusedDay; // 선택한 연도로 달력이 바뀌게 ...
                               Navigator.pop(context);
+                              setState(() {});
                             },
                           ),
                         ),
@@ -86,11 +86,9 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                   );
                 },
                 onDaySelected: (selectedDay, focusedDay) {
-                  setState(() {
-                    _selectedDay = DateTime(selectedDay.year, selectedDay.month,
-                        selectedDay.day, 0, 0, 0);
-                    focusedDay = focusedDay;
-                  });
+                  _selectedDay = DateTime(selectedDay.year, selectedDay.month,
+                      selectedDay.day, 0, 0, 0);
+                  setState(() {});
                 },
               ),
             ),
